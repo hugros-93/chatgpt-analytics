@@ -1,2 +1,2 @@
-# llamanalytics
-Automate analytics with Llama
+# chatgpt-analytics
+Automate analytics with ChatGPT
