@@ -33,6 +33,7 @@ def load_chatgpt_chart():
     list_plotly_charts = []
     for f in os.listdir(dir):
         fig = plotly.io.read_json(f'{dir}/{f}')
+        fig.update_layout(height=600)
         list_plotly_charts.append(fig)
     return list_plotly_charts
 
