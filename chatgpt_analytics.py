@@ -5,16 +5,11 @@ import os
 
 openai.api_key_path = 'API_KEY.txt'
 
-def ask_chat_gpt():
+def ask_chat_gpt(input_text):
 
     # Load prompt
     with open("prompt/context.txt", "r") as f:
         prompt_text = f.read()
-
-    # Input
-    input_text = input('Input:\n')
-    with open("input_prompt/input_prompt.txt", "w") as f:
-        f.write(input_text)
 
     # Generate
     response = openai.ChatCompletion.create(
@@ -26,6 +21,9 @@ def ask_chat_gpt():
     )
 
     # Output
+    with open("input_prompt/input_prompt.txt", "w") as f:
+        f.write(input_text)
+
     with open(f'output_chatgpt/output_chatgpt.json', 'w') as f:
         json.dump(response, f)
 
