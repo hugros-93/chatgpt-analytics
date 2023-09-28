@@ -12,9 +12,12 @@ from chatgpt_analytics import ask_chat_gpt, plot_from_response
 
 def load_chatgpt_prompt():
     filename = 'input_prompt/input_prompt.txt'
-    with open(filename, "r") as f:
-        input_prompt = f.read()
-    return f'"_{input_prompt}_"'
+    try:
+        with open(filename, "r") as f:
+            input_prompt = f.read()
+    except:
+        input_prompt = ''
+    return input_prompt
 
 def load_input_data(contents, filename, date):
     _, content_string = contents.split(',')
@@ -37,13 +40,16 @@ def load_input_data(contents, filename, date):
 
 def load_chatgpt_code():
     filename = 'output_chatgpt/output_chatgpt.json'
-    with open(filename, "r") as f:
-        response = json.load(f)
-    chatgpt_response = response["choices"][0]["message"]["content"]
-    pattern = r'```python(.*?)```'
-    code_blocks = re.findall(pattern, chatgpt_response, re.DOTALL)
-    code_output = "\n".join([x.strip() for x in code_blocks])
-    code_output = '```python\n' + code_output + '\n```'
+    try:
+        with open(filename, "r") as f:
+            response = json.load(f)
+        chatgpt_response = response["choices"][0]["message"]["content"]
+        pattern = r'```python(.*?)```'
+        code_blocks = re.findall(pattern, chatgpt_response, re.DOTALL)
+        code_output = "\n".join([x.strip() for x in code_blocks])
+        code_output = '```python\n' + code_output + '\n```'
+    except:
+        code_output = ''
     return code_output
 
 def load_chatgpt_chart():
@@ -55,6 +61,13 @@ def load_chatgpt_chart():
         list_plotly_charts.append(fig)
     return list_plotly_charts
 
+def clean_history():
+    try:
+        os.remove("output_chatgpt/output_chatgpt_history.json")
+        os.remove("input_prompt/input_prompt.txt")
+    except:
+        print('Nothing to clean!')
+
 app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY])
 
 # Dashboard
@@ -63,36 +76,34 @@ app.layout = html.Div([
     html.Div([
         html.H2("Input data"),
         dcc.Markdown("_Please select `.csv` files only._"),
+        dcc.Upload(
+            id='upload-data',
+            children=html.Div([
+                'Drag and Drop or ',
+                html.A('Select Files')
+            ]),
+            style={
+                'width': '98%',
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'margin': '1%'
+            },
+            multiple=False
+        ),
         dcc.Loading(
             id="loading-status-data",
             type="dot",
             children=dcc.Markdown(id="loading-status-data-output")
         ),
-        html.Div([
-            dcc.Upload(
-                id='upload-data',
-                children=html.Div([
-                    'Drag and Drop or ',
-                    html.A('Select Files')
-                ]),
-                style={
-                    'width': '98%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    'margin': '1%'
-                },
-                multiple=False
-            ),
-            html.Div(id='output-data-upload')
-        ]),
+        html.Div(id='output-data-upload'),
         html.H2("ChatGPT prompt"),
         dcc.Input(id='prompt-text-input', type='text', placeholder='Enter ChatGPT prompt here', style={'width': '100%', 'height': 50}),
         html.Div([
-            html.Button(id='submit-button-state', children='Submit', style={'width': '10%', 'float': 'left', 'display': 'inline-block'}),
+            html.Button(id='submit-button-state', children='Submit'),
             dcc.Loading(
                 id="loading-status",
                 type="dot",
@@ -103,14 +114,15 @@ app.layout = html.Div([
     ], style={'width': '100%', 'float': 'centered', 'display': 'inline-block'}),
     html.Div([
         html.H2("Input prompt"),
-        dcc.Markdown(id='prompt-text-output', children='Loading last results...'),
+        html.Button(id='clean-history-button', children='Clean history'),
+        dcc.Markdown(id='prompt-text-output', children='...'),
         html.H2("ChatGPT answer"),
         dcc.Markdown('_Extracting `Python` code only._'),
-        dcc.Markdown(id='chatgpt-code-output', children='Loading last results...')
+        dcc.Markdown(id='chatgpt-code-output', children='...')
     ], style={'width': '30%', 'float': 'left', 'display': 'inline-block'}),
     html.Div([
         html.H2("ChatGPT Charts"),
-        html.Div(id='chatgpt-charts-output', children='Loading last results...')
+        html.Div(id='chatgpt-charts-output', children='...')
     ], style={'width': '70%', 'float': 'right', 'display': 'inline-block'}),  
     ]
 )
@@ -126,10 +138,15 @@ app.layout = html.Div([
 def update_output(content, name, date):
     if content is not None:
         df = load_input_data(content, name, date)
+        df = df.iloc[:1000, :]
         children = dash_table.DataTable(
             data=df.to_dict('records'), 
-            style_table={'overflowX': 'auto', 'width': '100%', 'height': 300},
-                style_data={
+            style_table={
+                'overflowX': 'auto', 
+                'width': '100%', 
+                'height': 350
+            },
+            style_data={
                 'color': 'black',
                 'backgroundColor': 'white'
             },
@@ -143,38 +160,49 @@ def update_output(content, name, date):
                 'backgroundColor': 'rgb(210, 210, 210)',
                 'color': 'black',
                 'fontWeight': 'bold'
-            }
+            },
+            sort_action="native",
+            sort_mode="multi",
+            page_size= 10
         )
         status = f'_Loaded! ✅_'
         return status, children
     else:
         filename = 'input_data/input_data.csv'
-        df = pd.read_csv(filename)
-        children = dash_table.DataTable(
-            data=df.to_dict('records'), 
-            style_table={
-                'overflowX': 'auto', 
-                'width': '100%', 
-                'height': 300
-            },
-            style_data={
-                'color': 'black',
-                'backgroundColor': 'white',
-                'fontWeight': 'normal'
-            },
-            style_data_conditional=[
-                {
-                    'if': {'row_index': 'odd'},
-                    'backgroundColor': 'rgb(220, 220, 220)',
-                }
-            ],
-            style_header={
-                'backgroundColor': 'rgb(210, 210, 210)',
-                'color': 'black',
-                'fontWeight': 'normal'
-            }
-        )
-        status = f'_Loaded! ✅_'
+        try:
+            df = pd.read_csv(filename)
+            df = df.iloc[:1000, :]
+            children = dash_table.DataTable(
+                data=df.to_dict('records'), 
+                style_table={
+                    'overflowX': 'auto', 
+                    'width': '100%', 
+                    'height': 350
+                },
+                style_data={
+                    'color': 'black',
+                    'backgroundColor': 'white',
+                    'fontWeight': 'normal'
+                },
+                style_data_conditional=[
+                    {
+                        'if': {'row_index': 'odd'},
+                        'backgroundColor': 'rgb(220, 220, 220)',
+                    }
+                ],
+                style_header={
+                    'backgroundColor': 'rgb(210, 210, 210)',
+                    'color': 'black',
+                    'fontWeight': 'normal'
+                },
+                sort_action="native",
+                sort_mode="multi",
+                page_size= 10
+            )
+            status = f'_Loaded! ✅_'
+        except:
+            status = ''
+            children = html.P('')
         return status, children
 
 @callback(
@@ -183,7 +211,7 @@ def update_output(content, name, date):
     Output("chatgpt-code-output", "children"),
     Output("chatgpt-charts-output", "children"),
     Input('submit-button-state', "n_clicks"),
-    State("prompt-text-input", "value"),
+    State("prompt-text-input", "value")
 )
 def update_dashboard_on_click(_, prompt_text_input):
     if prompt_text_input == None or prompt_text_input == '':
@@ -205,6 +233,17 @@ def update_dashboard_on_click(_, prompt_text_input):
         time_to_update = int(time_to_update.total_seconds())
         status = f'_Done! ✅ ({time_to_update}s)_'
         return status, chatgpt_input_prompt, chatgpt_code_response, chatgpt_charts
+    
+@callback(
+    Output("prompt-text-output", "children", allow_duplicate=True),
+    Input('clean-history-button', "n_clicks"),
+    prevent_initial_call=True
+)
+def update_clean_history(n_clicks):
+    if n_clicks is not None:
+        clean_history()
+        chatgpt_input_prompt = load_chatgpt_prompt()
+        return chatgpt_input_prompt
 
 if __name__ == '__main__':
     app.run(debug=True)

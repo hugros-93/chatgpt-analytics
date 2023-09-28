@@ -1,0 +1,8 @@
+This is a request for producing a Python script to plot some charts using plotly.
+Input data are in a csv file named 'input_data.csv', located in a 'input_data/' folder.
+The charts should have a main title.
+Axis of the charts whould also have titles.
+The theme of charts should be 'simple_white'.
+All usefull plotly packages should be imported.
+The charts should not be shown using '.show()' function.
+The script should save the plotly chart as a json file in a '/output_charts' folder, named with the current datetime.
