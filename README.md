@@ -2,9 +2,9 @@
 Automate analytics with ChatGPT
 
 ### TODOs
-- [ ] Input data: upload drag and drop + improve design
-- [ ] Allow feedback and session conversation
-- [ ] Clean file save folder
-- [ ] Function-aware chat gpt (check input file)
+- [x] Upload drag and drop
+- [x] Improve input data design
 - [ ] Show errors in dashboard
+- [ ] Allow feedback and session conversation
+- [ ] Function-aware chat gpt (check input file)
 - [ ] Update README.md
