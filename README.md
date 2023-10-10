@@ -9,8 +9,13 @@
 - Run the `dashboard.py` file and open local host `http://127.0.0.1:8050` to access the dashboard.
 
 ## Project structure
+
+### Files
 - `chatgpt_analytics.py`: python file with alll functions to tinteract with ChatGPT.
 - `dashboard.py`: python file for interactive dahsboard and visualizations.
+- `generate_data.py`: generate synthetic data in the `input_data/` folder. _Not usefull to run the project with your own data._
+
+### Folders
 - `input_data/`: folder where the loaded input data will be stored.
 - `input_prompt/`: history of prompt entered in the session.
 - `output_charts/`: plotly charts as `.json` files exported from the chatgpt answer.
