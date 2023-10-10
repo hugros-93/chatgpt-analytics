@@ -64,7 +64,8 @@ def plot_from_response(response):
 
     # Clean export folder
     dir = 'output_charts/'
-    for f in os.listdir(dir):
+    chart_files = [x for x in os.listdir(dir) if x != '.gitignore']
+    for f in chart_files:
         os.remove(os.path.join(dir, f))
 
     # Exec code

@@ -86,7 +86,8 @@ def load_chatgpt_chart():
     dir = 'output_charts/'
     list_plotly_charts = []
     try:
-        for f in os.listdir(dir):
+        chart_files = [x for x in os.listdir(dir) if x != '.gitignore']
+        for f in chart_files:
             fig = plotly.io.read_json(f'{dir}/{f}')
             fig.update_layout(height=600)
             list_plotly_charts.append(fig)
