@@ -8,7 +8,7 @@ openai.api_key_path = 'API_KEY.txt'
 def ask_chat_gpt(input_text):
 
     # Load prompt
-    with open("prompt/context.txt", "r") as f:
+    with open("prompt_context.txt", "r") as f:
         prompt_text = f.read()
 
     # Load history
