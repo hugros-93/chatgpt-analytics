@@ -1,0 +1,1 @@
+- _Plot "value" as a function of "date", split by "category" in different subplots._

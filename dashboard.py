@@ -25,8 +25,7 @@ def load_input_data(contents, filename, date):
     decoded = base64.b64decode(content_string)
     try:
         if 'csv' in filename:
-            df = pd.read_csv(
-                io.StringIO(decoded.decode('utf-8')))
+            df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
         elif 'xls' in filename:
             df = pd.read_excel(io.BytesIO(decoded))
     except Exception as e:
@@ -35,8 +34,39 @@ def load_input_data(contents, filename, date):
             'There was an error processing this file.'
         ])
 
-    df.to_csv('input_data/input_data.csv')
+    df.rename( columns={'Unnamed: 0':'Index'}, inplace=True)
+    df.to_csv('input_data/input_data.csv', index=False)
     return df
+
+def format_table_data(df):
+    children = dash_table.DataTable(
+        data=df.to_dict('records'), 
+        style_table={
+            'overflowX': 'auto', 
+            'width': '100%', 
+            'height': 350
+        },
+        style_data={
+            'color': 'black',
+            'backgroundColor': 'white',
+            'fontWeight': 'normal'
+        },
+        style_data_conditional=[
+            {
+                'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(220, 220, 220)',
+            }
+        ],
+        style_header={
+            'backgroundColor': 'rgb(210, 210, 210)',
+            'color': 'black',
+            'fontWeight': 'normal'
+        },
+        sort_action="native",
+        sort_mode="multi",
+        page_size= 10
+    )
+    return children
 
 def load_chatgpt_code():
     filename = 'output_chatgpt/output_chatgpt.json'
@@ -139,32 +169,7 @@ def update_output(content, name, date):
     if content is not None:
         df = load_input_data(content, name, date)
         df = df.iloc[:1000, :]
-        children = dash_table.DataTable(
-            data=df.to_dict('records'), 
-            style_table={
-                'overflowX': 'auto', 
-                'width': '100%', 
-                'height': 350
-            },
-            style_data={
-                'color': 'black',
-                'backgroundColor': 'white'
-            },
-            style_data_conditional=[
-                {
-                    'if': {'row_index': 'odd'},
-                    'backgroundColor': 'rgb(220, 220, 220)',
-                }
-            ],
-            style_header={
-                'backgroundColor': 'rgb(210, 210, 210)',
-                'color': 'black',
-                'fontWeight': 'bold'
-            },
-            sort_action="native",
-            sort_mode="multi",
-            page_size= 10
-        )
+        children = format_table_data(df)
         status = f'_Loaded! ✅_'
         return status, children
     else:
@@ -172,33 +177,7 @@ def update_output(content, name, date):
         try:
             df = pd.read_csv(filename)
             df = df.iloc[:1000, :]
-            children = dash_table.DataTable(
-                data=df.to_dict('records'), 
-                style_table={
-                    'overflowX': 'auto', 
-                    'width': '100%', 
-                    'height': 350
-                },
-                style_data={
-                    'color': 'black',
-                    'backgroundColor': 'white',
-                    'fontWeight': 'normal'
-                },
-                style_data_conditional=[
-                    {
-                        'if': {'row_index': 'odd'},
-                        'backgroundColor': 'rgb(220, 220, 220)',
-                    }
-                ],
-                style_header={
-                    'backgroundColor': 'rgb(210, 210, 210)',
-                    'color': 'black',
-                    'fontWeight': 'normal'
-                },
-                sort_action="native",
-                sort_mode="multi",
-                page_size= 10
-            )
+            children = format_table_data(df)
             status = f'_Loaded! ✅_'
         except:
             status = ''
