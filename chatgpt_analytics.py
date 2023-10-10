@@ -69,7 +69,3 @@ def plot_from_response(response):
 
     # Exec code
     exec(code_output)
-
-if __name__ == "__main__":
-    response = ask_chat_gpt('Plot anglez as a function of timestamp in green, first 100 points.')
-    plot_from_response(response)
