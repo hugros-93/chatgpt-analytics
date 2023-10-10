@@ -85,10 +85,13 @@ def load_chatgpt_code():
 def load_chatgpt_chart():
     dir = 'output_charts/'
     list_plotly_charts = []
-    for f in os.listdir(dir):
-        fig = plotly.io.read_json(f'{dir}/{f}')
-        fig.update_layout(height=600)
-        list_plotly_charts.append(fig)
+    try:
+        for f in os.listdir(dir):
+            fig = plotly.io.read_json(f'{dir}/{f}')
+            fig.update_layout(height=600)
+            list_plotly_charts.append(fig)
+    except:
+        print('No chart!')
     return list_plotly_charts
 
 def clean_history():
