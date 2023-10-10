@@ -23,7 +23,7 @@
 - `dashboard.py`: python file for interactive dahsboard and visualizations.
 - `generate_data.py`: generate synthetic data in the `input_data/` folder. _Not usefull to run the project with your own data._
 - `prompt_context.txt`: context prompt file for ChatGPT.
-= `requirements.txt`: packages to create the venv.
+- `requirements.txt`: packages to create the venv.
 
 ### Folders
 - `input_data/`: folder where the loaded input data will be stored.
